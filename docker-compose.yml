@@ -1,0 +1,30 @@
+version: '3.9'
+
+services:
+  listener:
+    image: job-listener
+    command: uvicorn main:app --host 0.0.0.0 --port 5000
+    ports:
+      - "5000:5000"
+    environment:
+      - DB_PATH=/app/jobs-data/jobs.db
+    volumes:
+      - jobs-data:/app/jobs-data
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+
+  worker:
+    image: job-worker
+    command: python -c "import jobs; jobs.start_worker(); import time; time.sleep(999999)"
+    environment:
+      - DB_PATH=/app/jobs-data/jobs.db
+    volumes:
+      - jobs-data:/app/jobs-data
+    deploy:
+      restart_policy:
+        condition: on-failure
+
+volumes:
+  jobs-data:
