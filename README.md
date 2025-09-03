@@ -45,8 +45,8 @@ docker service ps jobstack_listener
 ### 1. Clone the repository
 
 ```bash
-git clone <repo-url>
-cd <repo-folder>
+git clone [<repo-url>](https://github.com/TalRandi/Job-service.git)
+cd Job-service
 ```
 
 ### 2. Build Docker images
