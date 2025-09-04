@@ -95,11 +95,11 @@ curl -X POST http://localhost:5000/jobs \
 # --------------------------------------------------------- #
 ### 3. Get Job Status
 ```bash
-curl -X GET http://localhost:5000/jobs/123e4567-e89b-12d3-a456-426614174000
+curl -X GET http://localhost:5000/jobs/{job_id}
 ```
 #### Response:
 {
-  "job_id": "123e4567-e89b-12d3-a456-426614174000",
+  "job_id": "{job_id}",
   "status": "running",
   "result": null
 }
@@ -110,7 +110,7 @@ curl -X GET http://localhost:5000/jobs/123e4567-e89b-12d3-a456-426614174000
 curl -X GET http://localhost:5000/jobs
 ```
 
-# List Jobs filtered by status, with limit of 50.
+#### List Jobs filtered by status, with limit of 50.
 ```bash
 curl -X GET "http://localhost:5000/jobs?status=running&limit=50"
 ```
@@ -126,7 +126,7 @@ curl -X GET "http://localhost:5000/jobs?status=running&limit=50"
 # --------------------------------------------------------- #
 ### 6. Cancel a Job
 ```bash
-curl -X POST http://localhost:5000/jobs/123e4567-e89b-12d3-a456-426614174000/cancel
+curl -X POST http://localhost:5000/jobs/{job_id}/cancel
 ```
 #### Response:
 
@@ -134,3 +134,15 @@ curl -X POST http://localhost:5000/jobs/123e4567-e89b-12d3-a456-426614174000/can
   "job_id": "123e4567-e89b-12d3-a456-426614174000",
   "message": "job canceled successfully"
 }
+
+
+## Remarks
+
+- Emphasis was placed on **code readability** and consistent coding style.
+- The project structure is clearly separated into files (`main.py` for the API, `jobs.py` for the core logic) to ensure clean separation of concerns.
+- Support for running multiple listener replicas with **load balancing** via Docker Swarm.
+- A dedicated **worker service** with a configurable concurrency limit.
+- Prevention of **race conditions** by introducing a `locked_by` mechanism in SQLite.
+- Full job lifecycle management, including: `queued`, `running`, `succeeded`, `failed`, and `canceled`.
+- Error handling with a single retry attempt (with backoff).
+- Persistent storage of job data through a shared volume (`jobs-data`).
