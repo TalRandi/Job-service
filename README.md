@@ -17,7 +17,7 @@ A backend service that accepts jobs, runs them in parallel with a configurable c
 ---
 
 ## Running locally with Docker Compose
-Build and start services:
+## Build and start services:
 ```bash
 docker compose up --build
 ```
@@ -31,67 +31,81 @@ docker compose up --build
 ## Setup and Run
 ## Running in Docker Swarm (with 2 replicas)
 ## Initialize Docker Swarm (only once per machine):
+```bash
 docker swarm init
+```
 
 ## Deploy the stack:
+```bash
 docker stack deploy -c docker-compose.yml jobstack
+```
 
 ## Check services:
+```bash
 docker service ls
+```
 
 ## Check that the listener has 2 replicas running:
+```bash
 docker service ps jobstack_listener
+```
 
 ### 1. Clone the repository
 
 ```bash
-git clone [<repo-url>](https://github.com/TalRandi/Job-service.git)
-cd Job-service
+git clone <repo-url>
+cd <repo-folder>
 ```
 
 ### 2. Build Docker images
+```bash
 docker compose build
+```
 
 ### 3. Run the service
+```bash
 docker compose up
-or
+```
+OR
+```bash
 CONCURRENCY_LIMIT=5 docker compose up
+```
 
 The listener will be available at http://localhost:5000
 The worker will automatically start and process jobs from the database.
 
 ## API Endpoints
 
-# ---------------------------------------------------------------------- #
+# ----------------------------------------------------------------------------- #
 # 1. Submit a Sleep Job
-
+```bash
 curl -X POST http://localhost:5000/jobs \
   -H "Content-Type: application/json" \
   -d '{
         "type": "sleep",
         "payload": { "seconds": 5 }
       }'
-
+```
 # Response (queued):
 { "job_id": "123e4567-e89b-12d3-a456-426614174000", "status": "queued" }
 
 
-# ---------------------------------------------------------------------- #
+# ----------------------------------------------------------------------------- #
 # 2. Submit an Analyze Job with a log file
-
+```bash
 curl -X POST http://localhost:5000/jobs \
   -F "type=analyze" \
   -F "payload={\"patterns\": [\"ERROR\",\"WARN\"]}" \
   -F "filename=@example.log"
-
+```
 # Response:
 { "job_id": "abcd1234-5678-90ef-ghij-1234567890kl", "status": "queued" }
 
-# ---------------------------------------------------------------------- #
+# ----------------------------------------------------------------------------- #
 # 3. Get Job Status
-
+```bash
 curl -X GET http://localhost:5000/jobs/123e4567-e89b-12d3-a456-426614174000
-
+```
 # Response:
 {
   "job_id": "123e4567-e89b-12d3-a456-426614174000",
@@ -99,13 +113,16 @@ curl -X GET http://localhost:5000/jobs/123e4567-e89b-12d3-a456-426614174000
   "result": null
 }
 
-# ---------------------------------------------------------------------- #
+# ----------------------------------------------------------------------------- #
 # 4. List Jobs
+```bash
 curl -X GET http://localhost:5000/jobs
+```
 
 # List Jobs filtered by status, with limit of 50.
+```bash
 curl -X GET "http://localhost:5000/jobs?status=running&limit=50"
-
+```
 # Response:
 {
   "items": [
@@ -115,11 +132,11 @@ curl -X GET "http://localhost:5000/jobs?status=running&limit=50"
 }
 
 
-# ---------------------------------------------------------------------- #
+# ----------------------------------------------------------------------------- #
 # 6. Cancel a Job
-
+```bash
 curl -X POST http://localhost:5000/jobs/123e4567-e89b-12d3-a456-426614174000/cancel
-
+```
 # Response:
 
 {
