@@ -15,11 +15,17 @@ A backend service that accepts jobs, runs them in parallel with a configurable c
 - Scalable deployment with Docker Swarm (2 replicas of listener).
 
 ---
-    
-## Running locally with Docker Compose
-## Build and start services:
+
+### Clone the repository
+
 ```bash
-docker compose up --build
+git clone https://github.com/TalRandi/Job-service.git
+cd Job-service
+```
+
+## Build the services:
+```bash
+docker compose build
 ```
 
 ## Requirements
@@ -37,8 +43,9 @@ docker swarm init
 
 ## Deploy the stack:
 ```bash
-docker stack deploy -c docker-compose.yml jobstack
+CONCURRENCY_LIMIT=5 docker stack deploy -c docker-compose.yml jobstack
 ```
+(CONCURRENCY_LIMIT can be changed. Default value is 3)
 
 ## Check services:
 ```bash
@@ -50,25 +57,9 @@ docker service ls
 docker service ps jobstack_listener
 ```
 
-### 1. Clone the repository
-
+### Run the service
 ```bash
-git clone https://github.com/TalRandi/Job-service.git
-cd Job-service
-```
-
-### 2. Build Docker images
-```bash
-docker compose build
-```
-
-### 3. Run the service
-```bash
-docker compose up
-```
-OR
-```bash
-CONCURRENCY_LIMIT=5 docker compose up
+ docker compose up
 ```
 
 The listener will be available at http://localhost:5000
