@@ -136,6 +136,31 @@ curl -X POST http://localhost:5000/jobs/{job_id}/cancel
 }
 
 
+
+
+## Running Tests
+
+Automated tests are provided in the `tests/` folder using **pytest** and **FastAPI TestClient**.  
+
+### Prerequisites
+Make sure you have a Python virtual environment set up:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+From the root of the project, run:
+
+```bash
+pytest -v tests/
+```
+
+
+
+
+
 ## Remarks
 
 - Emphasis was placed on **code readability** and consistent coding style.
