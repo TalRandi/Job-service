@@ -53,8 +53,8 @@ docker service ps jobstack_listener
 ### 1. Clone the repository
 
 ```bash
-git clone <repo-url>
-cd <repo-folder>
+git clone https://github.com/TalRandi/Job-service.git
+cd Job-service
 ```
 
 ### 2. Build Docker images
@@ -76,7 +76,7 @@ The worker will automatically start and process jobs from the database.
 
 ## API Endpoints
 
-# ----------------------------------------------------------------------------- #
+# --------------------------------------------------------- #
 # 1. Submit a Sleep Job
 ```bash
 curl -X POST http://localhost:5000/jobs \
@@ -90,7 +90,7 @@ curl -X POST http://localhost:5000/jobs \
 { "job_id": "123e4567-e89b-12d3-a456-426614174000", "status": "queued" }
 
 
-# ----------------------------------------------------------------------------- #
+# --------------------------------------------------------- #
 # 2. Submit an Analyze Job with a log file
 ```bash
 curl -X POST http://localhost:5000/jobs \
@@ -101,7 +101,7 @@ curl -X POST http://localhost:5000/jobs \
 # Response:
 { "job_id": "abcd1234-5678-90ef-ghij-1234567890kl", "status": "queued" }
 
-# ----------------------------------------------------------------------------- #
+# --------------------------------------------------------- #
 # 3. Get Job Status
 ```bash
 curl -X GET http://localhost:5000/jobs/123e4567-e89b-12d3-a456-426614174000
@@ -113,7 +113,7 @@ curl -X GET http://localhost:5000/jobs/123e4567-e89b-12d3-a456-426614174000
   "result": null
 }
 
-# ----------------------------------------------------------------------------- #
+# --------------------------------------------------------- #
 # 4. List Jobs
 ```bash
 curl -X GET http://localhost:5000/jobs
@@ -132,7 +132,7 @@ curl -X GET "http://localhost:5000/jobs?status=running&limit=50"
 }
 
 
-# ----------------------------------------------------------------------------- #
+# --------------------------------------------------------- #
 # 6. Cancel a Job
 ```bash
 curl -X POST http://localhost:5000/jobs/123e4567-e89b-12d3-a456-426614174000/cancel
