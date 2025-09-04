@@ -15,7 +15,7 @@ A backend service that accepts jobs, runs them in parallel with a configurable c
 - Scalable deployment with Docker Swarm (2 replicas of listener).
 
 ---
-
+    
 ## Running locally with Docker Compose
 ## Build and start services:
 ```bash
@@ -74,10 +74,10 @@ CONCURRENCY_LIMIT=5 docker compose up
 The listener will be available at http://localhost:5000
 The worker will automatically start and process jobs from the database.
 
-## API Endpoints
+# API Endpoints
 
 # --------------------------------------------------------- #
-# 1. Submit a Sleep Job
+### 1. Submit a Sleep Job
 ```bash
 curl -X POST http://localhost:5000/jobs \
   -H "Content-Type: application/json" \
@@ -86,27 +86,27 @@ curl -X POST http://localhost:5000/jobs \
         "payload": { "seconds": 5 }
       }'
 ```
-# Response (queued):
+#### Response (queued):
 { "job_id": "123e4567-e89b-12d3-a456-426614174000", "status": "queued" }
 
 
 # --------------------------------------------------------- #
-# 2. Submit an Analyze Job with a log file
+### 2. Submit an Analyze Job with a log file
 ```bash
 curl -X POST http://localhost:5000/jobs \
   -F "type=analyze" \
   -F "payload={\"patterns\": [\"ERROR\",\"WARN\"]}" \
   -F "filename=@example.log"
 ```
-# Response:
+#### Response:
 { "job_id": "abcd1234-5678-90ef-ghij-1234567890kl", "status": "queued" }
 
 # --------------------------------------------------------- #
-# 3. Get Job Status
+### 3. Get Job Status
 ```bash
 curl -X GET http://localhost:5000/jobs/123e4567-e89b-12d3-a456-426614174000
 ```
-# Response:
+#### Response:
 {
   "job_id": "123e4567-e89b-12d3-a456-426614174000",
   "status": "running",
@@ -114,7 +114,7 @@ curl -X GET http://localhost:5000/jobs/123e4567-e89b-12d3-a456-426614174000
 }
 
 # --------------------------------------------------------- #
-# 4. List Jobs
+### 4. List Jobs
 ```bash
 curl -X GET http://localhost:5000/jobs
 ```
@@ -123,7 +123,7 @@ curl -X GET http://localhost:5000/jobs
 ```bash
 curl -X GET "http://localhost:5000/jobs?status=running&limit=50"
 ```
-# Response:
+#### Response:
 {
   "items": [
     { "job_id": "...", "status": "running", "result": null, "payload": {...} }
@@ -133,11 +133,11 @@ curl -X GET "http://localhost:5000/jobs?status=running&limit=50"
 
 
 # --------------------------------------------------------- #
-# 6. Cancel a Job
+### 6. Cancel a Job
 ```bash
 curl -X POST http://localhost:5000/jobs/123e4567-e89b-12d3-a456-426614174000/cancel
 ```
-# Response:
+#### Response:
 
 {
   "job_id": "123e4567-e89b-12d3-a456-426614174000",
