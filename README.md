@@ -50,11 +50,12 @@ cd <repo-folder>
 ```
 
 ### 2. Build Docker images
-docker-compose build
+docker compose build
 
 ### 3. Run the service
-docker-compose up
-
+docker compose up
+or
+CONCURRENCY_LIMIT=5 docker compose up
 
 The listener will be available at http://localhost:5000
 The worker will automatically start and process jobs from the database.
@@ -64,7 +65,7 @@ The worker will automatically start and process jobs from the database.
 # ----------------------------------------------------------------------------- #
 # 1. Submit a Sleep Job
 
-curl -X POST http://localhost:5001/jobs \
+curl -X POST http://localhost:5000/jobs \
   -H "Content-Type: application/json" \
   -d '{
         "type": "sleep",
@@ -78,7 +79,7 @@ curl -X POST http://localhost:5001/jobs \
 # ----------------------------------------------------------------------------- #
 # 2. Submit an Analyze Job with a log file
 
-curl -X POST http://localhost:5001/jobs \
+curl -X POST http://localhost:5000/jobs \
   -F "type=analyze" \
   -F "payload={\"patterns\": [\"ERROR\",\"WARN\"]}" \
   -F "filename=@example.log"
@@ -89,7 +90,7 @@ curl -X POST http://localhost:5001/jobs \
 # ----------------------------------------------------------------------------- #
 # 3. Get Job Status
 
-curl -X GET http://localhost:5001/jobs/123e4567-e89b-12d3-a456-426614174000
+curl -X GET http://localhost:5000/jobs/123e4567-e89b-12d3-a456-426614174000
 
 # Response:
 {
@@ -100,10 +101,10 @@ curl -X GET http://localhost:5001/jobs/123e4567-e89b-12d3-a456-426614174000
 
 # ----------------------------------------------------------------------------- #
 # 4. List Jobs
-curl -X GET http://localhost:5001/jobs
+curl -X GET http://localhost:5000/jobs
 
 # List Jobs filtered by status, with limit of 50.
-curl -X GET "http://localhost:5001/jobs?status=running&limit=50"
+curl -X GET "http://localhost:5000/jobs?status=running&limit=50"
 
 # Response:
 {
@@ -117,7 +118,7 @@ curl -X GET "http://localhost:5001/jobs?status=running&limit=50"
 # ----------------------------------------------------------------------------- #
 # 6. Cancel a Job
 
-curl -X POST http://localhost:5001/jobs/123e4567-e89b-12d3-a456-426614174000/cancel
+curl -X POST http://localhost:5000/jobs/123e4567-e89b-12d3-a456-426614174000/cancel
 
 # Response:
 
