@@ -5,6 +5,7 @@ import json
 import os
 from uuid import uuid4
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import uuid
 
 # SQLite setup
 DB_PATH = os.getenv("DB_PATH", "jobs.db")
@@ -25,7 +26,8 @@ def init_db():
             payload TEXT,
             status TEXT,
             result TEXT,
-            retry_count INTEGER DEFAULT 0
+            retry_count INTEGER DEFAULT 0,
+            locked_by TEXT DEFAULT NULL
         )
     ''')
     conn.commit()
@@ -123,18 +125,28 @@ def cancel_job(job_id: str):
 # ---------------- Worker logic ---------------- #
 
 def run_job(job):
+    import json
+    import time
+
     job_id = job["job_id"]
-    payload = json.loads(job["payload"])
     conn = get_conn()
     c = conn.cursor()
-    
+
+    # check if job is locked by this worker
+    c.execute("SELECT locked_by FROM jobs WHERE job_id=?", (job_id,))
+    row = c.fetchone()
+    if not row or row["locked_by"] != WORKER_ID:
+        conn.close()
+        return  # someone else is taking the job
+
     try:
         # mark as running
-        c.execute("UPDATE jobs SET status = ? WHERE job_id = ?", ("running", job_id))
+        c.execute("UPDATE jobs SET status=? WHERE job_id=?", ("running", job_id))
         conn.commit()
 
-        # execute job
+        payload = json.loads(job["payload"])
         result = None
+
         if job["type"] == "sleep":
             seconds = payload.get("seconds", 1)
             time.sleep(seconds)
@@ -145,49 +157,76 @@ def run_job(job):
             patterns = payload.get("patterns", [])
             if not filename:
                 raise ValueError("Missing filename in payload")
-            results = {}
+            counts = {}
             with open(filename, "r", encoding="utf-8") as f:
                 text = f.read()
                 for pat in patterns:
-                    results[pat] = text.count(pat)
-            result = {"counts": results}
+                    counts[pat] = text.count(pat)
+            result = {"counts": counts}
 
         else:
             result = {"info": f"job type not implemented: {job['type']}"}
 
         # mark as succeeded
-        c.execute("UPDATE jobs SET status = ?, result = ? WHERE job_id = ?",
-                  ("succeeded", json.dumps(result), job_id))
+        c.execute(
+            "UPDATE jobs SET status=?, result=? WHERE job_id=?",
+            ("succeeded", json.dumps(result), job_id)
+        )
         conn.commit()
 
     except Exception as e:
         retry_count = job.get("retry_count", 0)
         if retry_count < 1:
-            # small backoff
+            # small backoff before retry
             time.sleep(2)
             # update retry_count
-            c.execute("UPDATE jobs SET retry_count = ? WHERE job_id = ?", (retry_count + 1, job_id))
+            c.execute(
+                "UPDATE jobs SET retry_count=? WHERE job_id=?",
+                (retry_count + 1, job_id)
+            )
             conn.commit()
             # fetch fresh job data
-            c.execute("SELECT * FROM jobs WHERE job_id = ?", (job_id,))
-            job = dict(c.fetchone())
-            job["payload"] = json.loads(job["payload"])
-            run_job(job)  # retry once
+            c.execute("SELECT * FROM jobs WHERE job_id=?", (job_id,))
+            fresh_job = dict(c.fetchone())
+            fresh_job["payload"] = json.loads(fresh_job["payload"])
+            run_job(fresh_job)  # retry once
         else:
             # mark as failed
-            c.execute("UPDATE jobs SET status = ?, result = ? WHERE job_id = ?",
-                      ("failed", json.dumps({"error": str(e)}), job_id))
+            c.execute(
+                "UPDATE jobs SET status=?, result=? WHERE job_id=?",
+                ("failed", json.dumps({"error": str(e)}), job_id)
+            )
             conn.commit()
+
     finally:
         conn.close()
+
+WORKER_ID = str(uuid.uuid4()) 
 
 def worker_loop():
     executor = ThreadPoolExecutor(max_workers=MAX_CONCURRENCY)
     while True:
         conn = get_conn()
         c = conn.cursor()
-        c.execute("SELECT * FROM jobs WHERE status = 'queued' LIMIT ?", (MAX_CONCURRENCY,))
+        c.execute("BEGIN;")
+
+        # choose jobs that are queued and not locked
+        c.execute(
+            "SELECT * FROM jobs WHERE status='queued' AND locked_by IS NULL LIMIT ?",
+            (MAX_CONCURRENCY,)
+        )
         jobs_to_run = c.fetchall()
+        job_ids = [job["job_id"] for job in jobs_to_run]
+
+        # lock them with locked_by
+        if job_ids:
+            c.execute(
+                "UPDATE jobs SET locked_by=? WHERE job_id IN ({seq})".format(
+                    seq=','.join('?'*len(job_ids))
+                ),
+                [WORKER_ID, *job_ids]
+            )
+        conn.commit()
         conn.close()
 
         futures = []
@@ -196,7 +235,7 @@ def worker_loop():
             futures.append(executor.submit(run_job, job))
 
         for f in as_completed(futures):
-            pass  # just wait for jobs to complete
+            pass
 
         time.sleep(1)
 
